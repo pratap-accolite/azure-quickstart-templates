@@ -555,11 +555,6 @@
             "tier": "Standard",
             "capacity": 1
          },
-         "plan": {
-            "name": "[variables('imageSKU')]",
-            "product": "[parameters('imageOffer')]",
-            "publisher": "[variables('imagePublisher')]"
-         },
          "properties": {
             "overprovision": false,
             "upgradePolicy": {
@@ -571,7 +566,9 @@
                      "caching": "ReadOnly",
                      "createOption": "FromImage"
                   },
-                  "imageReference": "[variables('imageReference')]"
+                  "imageReference": {
+                       "id": "/subscriptions/739c4e86-bd75-4910-8d6e-d7eb23ab94f3/resourceGroups/BakingDP/providers/Microsoft.Compute/images/w12r2d-14-2-10image"
+                   }
                },
                "osProfile": {
                   "computerNamePrefix": "[variables('dbvmssName')]",
@@ -646,11 +643,6 @@
             "tier": "Standard",
             "capacity": "[parameters('minimumInstanceCount')]"
          },
-         "plan": {
-            "name": "[variables('imageSKU')]",
-            "product": "[parameters('imageOffer')]",
-            "publisher": "[variables('imagePublisher')]"
-         },
          "properties": {
             "overprovision": false,
             "upgradePolicy": {
@@ -662,7 +654,9 @@
                      "caching": "ReadOnly",
                      "createOption": "FromImage"
                   },
-                  "imageReference": "[variables('imageReference')]"
+                  "imageReference": {
+                       "id": "/subscriptions/739c4e86-bd75-4910-8d6e-d7eb23ab94f3/resourceGroups/BakingDP/providers/Microsoft.Compute/images/w12r2d-14-2-10image"
+                   }
                },
                "osProfile": {
                   "computerNamePrefix": "[variables('namingInfix')]",
