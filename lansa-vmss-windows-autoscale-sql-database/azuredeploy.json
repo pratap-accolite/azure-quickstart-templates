@@ -9,6 +9,59 @@
             "description": "Resource Group Location."
          }
       },
+      "osName": {
+         "type": "string",
+         "allowedValues": [
+            "Windows Server 2019",
+            "Windows Server 2016",
+            "Windows Server 2012"
+         ],
+         "defaultValue": "Windows Server 2019",
+         "metadata": {
+            "description": "Choose the Windows Server image version to use "
+         }
+      },
+      "lansaVersion": {
+         "type": "string",
+         "allowedValues": [
+            "V15 GA",
+            "V14 SP2"
+         ],
+         "defaultValue": "V15 GA",
+         "metadata": {
+            "description": "Visual LANSA Version"
+         }
+      },
+      "imageSource": {
+         "type": "string",
+         "allowedValues": [
+            "Marketplace",
+            "Custom"
+
+         ],
+         "defaultValue": "Marketplace",
+         "metadata": {
+            "description": "Location from where the image must be picked"
+         }
+      },
+      "imageId": {
+         "type": "string",
+         "defaultValue": "",
+         "metadata": {
+            "description": "The resource id of the custom image"
+         }
+      },
+      "imageReleaseState": {
+         "type": "string",
+         "allowedValues": [
+            "Production",
+            "Preview"
+         ],
+         "defaultValue": "Production",
+         "metadata": {
+            "description": "Release state of the LANSA Scalable License image.The Preview release state is restricted to a very limited audience."
+         }
+      },
       "msiURL": {
          "type": "string",
          "defaultValue": "https://lansalpcmsdn.blob.core.windows.net/app/test/AWAMAPP_v14.1.2_en-us.msi",
@@ -261,17 +314,6 @@
             "description": "Update Stack: Set this to 1 to update the web configuration"
          }
       },
-      "imageOffer": {
-         "type": "string",
-         "defaultValue": "lansa-scalable-license",
-         "allowedValues": [
-            "lansa-scalable-license",
-            "lansa-scalable-license-preview"
-         ],
-         "metadata": {
-            "description": "The offer of the image. Allowed values: lansa-scalable-license, lansa-scalable-license-preview"
-         }
-      },
       "gitBranch": {
          "type": "string",
          "defaultValue": "support/L4W14200_scalable",
@@ -298,63 +340,109 @@
          }
       }
    },
-  "variables": {
-    "isNewDatabase": "[equals(parameters('databaseNewOrExisting'), 'new')]",
-    "namingInfix": "[toLower(substring(concat(parameters('stackName'), uniqueString(resourceGroup().id)), 0, 9))]",
-    "longNamingInfix": "[toLower(parameters('stackName'))]",
-    "dblongNamingInfix": "[toLower(concat('db',parameters('stackName')))]",
-    "aglongNamingInfix": "[toLower(concat('ag',parameters('stackName')))]",
-    "dbvmssName": "[toLower(substring(concat('db',parameters('stackName'), uniqueString(resourceGroup().id)), 0, 9))]",
-    "addressPrefix": "10.0.0.0/16",
-    "subnetPrefix": "10.0.0.0/24",
-    "virtualNetworkName": "[concat(variables('namingInfix'), 'vnet')]",
-    "publicIPAddressName": "[concat(variables('namingInfix'), 'pip')]",
-    "dbpublicIPAddressName": "[concat(variables('namingInfix'), 'dbpip')]",
-    "subnetName": "[concat(variables('namingInfix'), 'subnet')]",
-    "loadBalancerName": "[concat(variables('namingInfix'), 'lb')]",
-    "lbFrontEndName": "LoadBalancerFrontEnd",
-    "lbProbeName": "LoadBalancerProbe",
-    "dbloadBalancerName": "[concat(variables('namingInfix'), 'dblb')]",
-    "dblbFrontEndName": "dbLoadBalancerFrontEnd",
-    "dblbProbeName": "dbLoadBalancerProbe",
-    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
-    "dbpublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('dbpublicIPAddressName'))]",
-    "natPoolName": "[concat(variables('namingInfix'), 'natpool')]",
-    "bePoolName": "[concat(variables('namingInfix'), 'bepool')]",
-    "dbbePoolName": "[concat(variables('namingInfix'), 'dbbepool')]",
-    "natStartPort": 50000,
-    "natEndPort": 50119,
-    "natBackendPort": 3389,
-    "nicName": "[concat(variables('namingInfix'), 'nic')]",
-    "ipConfigName": "[concat(variables('namingInfix'), 'ipconfig')]",
-    "frontEndIPConfigID": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('loadBalancerName'), variables('lbFrontEndName'))]",
-    "imagePublisher": "lansa",
-    "imageSku": "lansa-scalable-license-14-2",
-    "osType": {
-      "publisher": "[variables('imagePublisher')]",
-      "offer": "[parameters('imageOffer')]",
-      "sku": "[variables('imageSku')]",
-      "version": "latest"
-    },
-    "imageReference": "[variables('osType')]",
-    "sqlserverName": "[concat(variables('namingInfix'), 'sqlserver')]",
-    "gitRepo": "https://raw.githubusercontent.com/robe070/cookbooks/",
-    "gitRefreshName": "git-pull.ps1",
-   "gitRefreshUri": "[concat(variables('gitRepo'), parameters('gitBranch'), '/scripts/', variables('gitRefreshName'))]",
-   "q":  "'",
-   "agPublicIPAddressName": "[concat(variables('namingInfix'), '-agpip')]",
-   "agPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('agPublicIPAddressName'))]",
-   "agSubnetPrefix": "10.0.1.0/24",
-   "agSubnetName": "[concat(variables('namingInfix'), '-agsubnet')]",
-   "agSubnetID": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('agsubnetName'))]",
-   "agName": "[concat(variables('namingInfix'), '-ag')]",
-   "agHttpListenerName": "appGatewayHttpListener",
-   "agFrontendIPName": "appGatewayFrontendIP",
-   "agFrontendPortName": "appGatewayFrontendPort",
-   "agSslCertName": "appGatewaySslCert",
-   "agBackendHttpSettingsName": "appGatewayBackendHttpSettings",
-   "agBackendAddressPoolName": "[concat(variables('namingInfix'), '-agpool')]"
-  },
+   "variables": {
+      "isCustomImage": "[equals(parameters('imageSource'), 'Custom')]",
+      "isNewDatabase": "[equals(parameters('databaseNewOrExisting'), 'new')]",
+      "namingInfix": "[toLower(substring(concat(parameters('stackName'), uniqueString(resourceGroup().id)), 0, 9))]",
+      "customNamingInfix": "[if(variables('isCustomImage'), variables('namingInfix'), 'dummyNamingInfix')]",
+      "skuNamingInfix": "[if(variables('isCustomImage'), 'dummyNamingInfix', variables('namingInfix'))]",
+      "longNamingInfix": "[toLower(parameters('stackName'))]",
+      "dblongNamingInfix": "[toLower(concat('db',parameters('stackName')))]",
+      "aglongNamingInfix": "[toLower(concat('ag',parameters('stackName')))]",
+      "dbvmssName": "[toLower(substring(concat('db',parameters('stackName'), uniqueString(resourceGroup().id)), 0, 9))]",
+      "dbvmssCustomName": "[if(variables('isCustomImage'), variables('dbvmssName'), 'dummydbvmssName')]",
+      "dbvmssSkuName": "[if(variables('isCustomImage'), 'dummydbvmssName', variables('dbvmssName'))]",
+      "addressPrefix": "10.0.0.0/16",
+      "subnetPrefix": "10.0.0.0/24",
+      "virtualNetworkName": "[concat(variables('namingInfix'), 'vnet')]",
+      "publicIPAddressName": "[concat(variables('namingInfix'), 'pip')]",
+      "dbpublicIPAddressName": "[concat(variables('namingInfix'), 'dbpip')]",
+      "subnetName": "[concat(variables('namingInfix'), 'subnet')]",
+      "loadBalancerName": "[concat(variables('namingInfix'), 'lb')]",
+      "lbFrontEndName": "LoadBalancerFrontEnd",
+      "lbProbeName": "LoadBalancerProbe",
+      "dbloadBalancerName": "[concat(variables('namingInfix'), 'dblb')]",
+      "dblbFrontEndName": "dbLoadBalancerFrontEnd",
+      "dblbProbeName": "dbLoadBalancerProbe",
+      "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
+      "dbpublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('dbpublicIPAddressName'))]",
+      "natPoolName": "[concat(variables('namingInfix'), 'natpool')]",
+      "bePoolName": "[concat(variables('namingInfix'), 'bepool')]",
+      "dbbePoolName": "[concat(variables('namingInfix'), 'dbbepool')]",
+      "natStartPort": 50000,
+      "natEndPort": 50119,
+      "natBackendPort": 3389,
+      "nicName": "[concat(variables('namingInfix'), 'nic')]",
+      "ipConfigName": "[concat(variables('namingInfix'), 'ipconfig')]",
+      "frontEndIPConfigID": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('loadBalancerName'), variables('lbFrontEndName'))]",
+      "marketplaceSettings": {
+         "Windows Server 2019": {
+            "offer": "lansa-scalable-license",
+            "version": {
+               "V15 GA": {
+                  "sku": "w19d-15-0"
+               },
+               "V14 SP2": {
+                  "sku": "w19d-14-2"
+               }
+            }
+         },
+         "Windows Server 2016": {
+            "offer": "lansa-scalable-license",
+            "version": {
+               "V15 GA": {
+                  "sku": "w16d-15-0"
+               },
+               "V14 SP2": {
+                  "sku": "w16d-14-2"
+               }
+            }
+         },
+         "Windows Server 2012": {
+            "offer": "lansa-scalable-license",
+            "version": {
+               "V15 GA": {
+                  "sku": "w12r2d-15-0"
+
+               },
+               "V14 SP2": {
+                  "sku": "lansa-scalable-license-14-2"
+               }
+            }
+         }
+      },
+      "imagePublisher": "lansa",
+      "imageSku": "[variables('marketplaceSettings')[parameters('osName')].version[parameters('lansaVersion')].sku]",
+      "imageOfferName": "[concat(variables('marketplaceSettings')[parameters('osName')].offer, if (variables('isPreview'), '-preview', ''))]",
+      "osType": {
+         "publisher": "[variables('imagePublisher')]",
+         "offer": "[variables('imageOfferName')]",
+         "sku": "[variables('imageSku')]",
+         "version": "latest"
+      },
+      "imageResourceId": {
+         "id": "[parameters('imageId')]"
+      },
+      "imageReference": "[if(variables('isCustomImage'), variables('imageResourceId'), variables('osType'))]",
+      "isPreview": "[equals(parameters('imageReleaseState'), 'Preview')]",
+      "sqlserverName": "[concat(variables('namingInfix'), 'sqlserver')]",
+      "gitRepo": "https://raw.githubusercontent.com/robe070/cookbooks/",
+      "gitRefreshName": "git-pull.ps1",
+      "gitRefreshUri": "[concat(variables('gitRepo'), parameters('gitBranch'), '/scripts/', variables('gitRefreshName'))]",
+      "q": "'",
+      "agPublicIPAddressName": "[concat(variables('namingInfix'), '-agpip')]",
+      "agPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('agPublicIPAddressName'))]",
+      "agSubnetPrefix": "10.0.1.0/24",
+      "agSubnetName": "[concat(variables('namingInfix'), '-agsubnet')]",
+      "agSubnetID": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('agsubnetName'))]",
+      "agName": "[concat(variables('namingInfix'), '-ag')]",
+      "agHttpListenerName": "appGatewayHttpListener",
+      "agFrontendIPName": "appGatewayFrontendIP",
+      "agFrontendPortName": "appGatewayFrontendPort",
+      "agSslCertName": "appGatewaySslCert",
+      "agBackendHttpSettingsName": "appGatewayBackendHttpSettings",
+      "agBackendAddressPoolName": "[concat(variables('namingInfix'), '-agpool')]"
+   },
    "resources": [
       {
          "type": "Microsoft.Network/virtualNetworks",
@@ -539,8 +627,9 @@
          }
       },
       {
+         "condition": "[not(variables('isCustomImage'))]",
          "type": "Microsoft.Compute/virtualMachineScaleSets",
-         "name": "[variables('dbvmssName')]",
+         "name": "[variables('dbvmssSkuName')]",
          "location": "[parameters('location')]",
          "apiVersion": "2019-07-01",
          "dependsOn": [
@@ -555,6 +644,11 @@
             "tier": "Standard",
             "capacity": 1
          },
+         "plan": {
+            "name": "[variables('imageSKU')]",
+            "product": "[variables('imageOfferName')]",
+            "publisher": "[variables('imagePublisher')]"
+         },
          "properties": {
             "overprovision": false,
             "upgradePolicy": {
@@ -566,12 +660,10 @@
                      "caching": "ReadOnly",
                      "createOption": "FromImage"
                   },
-                  "imageReference": {
-                       "id": "/subscriptions/739c4e86-bd75-4910-8d6e-d7eb23ab94f3/resourceGroups/BakingDP/providers/Microsoft.Compute/images/w12r2d-14-2-10image"
-                   }
+                  "imageReference": "[variables('imageReference')]"
                },
                "osProfile": {
-                  "computerNamePrefix": "[variables('dbvmssName')]",
+                  "computerNamePrefix": "[variables('dbvmssSkuName')]",
                   "adminUsername": "[parameters('adminUsername')]",
                   "adminPassword": "[parameters('adminPassword')]",
                   "windowsConfiguration": {
@@ -627,8 +719,9 @@
          }
       },
       {
+         "condition": "[not(variables('isCustomImage'))]",
          "type": "Microsoft.Compute/virtualMachineScaleSets",
-         "name": "[variables('namingInfix')]",
+         "name": "[variables('skuNamingInfix')]",
          "location": "[parameters('location')]",
          "apiVersion": "2019-07-01",
          "dependsOn": [
@@ -636,7 +729,196 @@
             "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
             "[concat('Microsoft.Sql/servers/', variables('sqlserverName'))]",
             "[concat('Microsoft.Sql/servers/', variables('sqlserverName'), '/databases/', parameters('databaseName'))]",
-            "[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('dbvmssName'))]"
+            "[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('dbvmssSkuName'))]"
+         ],
+         "sku": {
+            "name": "[parameters('virtualMachineSize')]",
+            "tier": "Standard",
+            "capacity": "[parameters('minimumInstanceCount')]"
+         },
+         "plan": {
+            "name": "[variables('imageSKU')]",
+            "product": "[variables('imageOfferName')]",
+            "publisher": "[variables('imagePublisher')]"
+         },
+         "properties": {
+            "overprovision": false,
+            "upgradePolicy": {
+               "mode": "Automatic"
+            },
+            "virtualMachineProfile": {
+               "storageProfile": {
+                  "osDisk": {
+                     "caching": "ReadOnly",
+                     "createOption": "FromImage"
+                  },
+                  "imageReference": "[variables('imageReference')]"
+               },
+               "osProfile": {
+                  "computerNamePrefix": "[variables('skuNamingInfix')]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPassword')]",
+                  "windowsConfiguration": {
+                     "provisionVMAgent": true
+                  }
+               },
+               "networkProfile": {
+                  "networkInterfaceConfigurations": [
+                     {
+                        "name": "[variables('nicName')]",
+                        "properties": {
+                           "primary": true,
+                           "ipConfigurations": [
+                              {
+                                 "name": "[variables('ipConfigName')]",
+                                 "properties": {
+                                    "subnet": {
+                                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
+                                     },
+                                     "loadBalancerBackendAddressPools": [
+                                        {
+                                           "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('bePoolName'))]"
+                                        }
+                                     ],
+                                    "loadBalancerInboundNatPools": [
+                                       {
+                                          "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatPools', variables('loadBalancerName'), variables('natPoolName'))]"
+                                       }
+                                    ],
+                                    "applicationGatewayBackendAddressPools": [
+                                       {
+                                          "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agName'), variables('agBackendAddressPoolName'))]"
+                                       }
+                                    ]
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  ]
+               },
+               "extensionProfile": {
+                  "extensions": [
+                     {
+                        "name": "MainInstall",
+                        "properties": {
+                           "publisher": "Microsoft.Compute",
+                           "type": "CustomScriptExtension",
+                           "typeHandlerVersion": "1.9",
+                           "autoUpgradeMinorVersion": true,
+                           "forceUpdateTag": "[concat( parameters('installMSI'),parameters('updateMSI'),parameters('triggerWebConfig'),parameters('UninstallMSI'),parameters('fixLicense'), parameters('trace'), parameters('gitBranch') )]",
+                           "settings": {
+                              "fileUris": [ "[variables('gitRefreshUri')]" ]
+                           },
+                           "protectedSettings": {
+                              "commandToExecute": "[concat('powershell -NoProfile -ExecutionPolicy unrestricted -command \"& {pushd;./',variables('gitRefreshName'), ' ', parameters('gitBranch'), ';popd;', 'pushd;c:\\lansa\\scripts\\azure-custom-script.ps1 ', '-SUDB \"0\" -server_name ', variables('Q'),  if(variables('isNewDatabase'), reference(variables('sqlserverName')).fullyQualifiedDomainName, parameters('databaseServerName')), variables('Q'), ' -DBUT ', variables('Q'), parameters('databaseType'), variables('Q'),  ' -dbname ', variables('Q'),  parameters('databaseName'), variables('Q'), ' -dbuser ', variables('Q'),  parameters('databaseLogin'), variables('Q'), ' -dbpassword ', variables('Q'),  parameters('databaseLoginPassword'), variables('Q'), ' -webuser ', variables('Q'),  parameters('webUsername'), variables('Q'), ' -webpassword ', variables('Q'),  parameters('webPassword'), variables('Q'), ' -MSIuri ', variables('Q'),  parameters('msiURL'), variables('Q'),  ' -maxconnections ', variables('Q'),  parameters('webServerMaxConnect'), variables('Q'), ' -trace ', variables('Q'),  parameters('trace'), variables('Q'), ' -installMSI ', variables('Q'),  parameters('installMSI'), variables('Q'), ' -updateMSI ', variables('Q'),  parameters('updateMSI'), variables('Q'),' -triggerWebConfig ', variables('Q'),  parameters('triggerWebConfig'), variables('Q'), ' -UninstallMSI ', variables('Q'),  parameters('UninstallMSI'), variables('Q'), ' -fixLicense ', variables('Q'),  parameters('fixLicense'), variables('Q'),  ';if ($LASTEXITCODE -ne 0) {Write-Error (\"MSI Install failed\");exit $LASTEXITCODE}; exit 0;popd;}\"')]"
+                           }
+                        }
+                     }
+                  ]
+               }
+            }
+         }
+      },
+      {
+         "condition": "[variables('isCustomImage')]",
+         "type": "Microsoft.Compute/virtualMachineScaleSets",
+         "name": "[variables('dbvmssCustomName')]",
+         "location": "[parameters('location')]",
+         "apiVersion": "2019-07-01",
+         "dependsOn": [
+            "[concat('Microsoft.Network/loadBalancers/', variables('loadBalancerName'))]",
+            "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+            "[concat('Microsoft.Sql/servers/', variables('sqlserverName'))]",
+            "[concat('Microsoft.Sql/servers/', variables('sqlserverName'), '/databases/', parameters('databaseName'))]",
+            "[concat('Microsoft.Network/applicationGateways/', variables('agName'))]"
+         ],
+         "sku": {
+            "name": "[parameters('dbVirtualMachineSize')]",
+            "tier": "Standard",
+            "capacity": 1
+         },
+         "properties": {
+            "overprovision": false,
+            "upgradePolicy": {
+               "mode": "Automatic"
+            },
+            "virtualMachineProfile": {
+               "storageProfile": {
+                  "osDisk": {
+                     "caching": "ReadOnly",
+                     "createOption": "FromImage"
+                  },
+                  "imageReference": "[variables('imageReference')]"
+               },
+               "osProfile": {
+                  "computerNamePrefix": "[variables('dbvmssCustomName')]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPassword')]",
+                  "windowsConfiguration": {
+                     "provisionVMAgent": true
+                  }
+               },
+               "networkProfile": {
+                  "networkInterfaceConfigurations": [
+                     {
+                        "name": "[concat('db', variables('nicName'))]",
+                        "properties": {
+                           "primary": true,
+                           "ipConfigurations": [
+                              {
+                                 "name": "[concat( 'db',variables('ipConfigName'))]",
+                                 "properties": {
+                                    "subnet": {
+                                       "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
+                                    },
+                                    "loadBalancerBackendAddressPools": [
+                                       {
+                                          "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('dbloadBalancerName'), variables('dbbePoolName'))]"
+                                       }
+                                    ]
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  ]
+               },
+               "extensionProfile": {
+                  "extensions": [
+                     {
+                        "name": "FirstInstall",
+                        "properties": {
+                           "publisher": "Microsoft.Compute",
+                           "type": "CustomScriptExtension",
+                           "typeHandlerVersion": "1.9",
+                           "autoUpgradeMinorVersion": true,
+                           "forceUpdateTag": "[concat( parameters('installMSI'),parameters('updateMSI'),parameters('triggerWebConfig'),parameters('UninstallMSI'),parameters('fixLicense'), parameters('trace'), parameters('gitBranch') )]",
+                           "settings": {
+                              "fileUris": [ "[variables('gitRefreshUri')]" ]
+                           },
+                           "protectedSettings": {
+                              "commandToExecute": "[concat('powershell -NoProfile -ExecutionPolicy unrestricted -command \"& {pushd;./',variables('gitRefreshName'), ' ', parameters('gitBranch'), ';popd;', 'pushd;c:\\lansa\\scripts\\azure-custom-script.ps1 ', '-server_name ',variables('Q'), if(variables('isNewDatabase'), reference(variables('sqlserverName')).fullyQualifiedDomainName, parameters('databaseServerName')), variables('Q'), ' -DBUT ', variables('Q'), parameters('databaseType'), variables('Q'), ' -dbname ', variables('Q'), parameters('databaseName'), variables('Q'), ' -dbuser ', variables('Q'), parameters('databaseLogin'), variables('Q'), ' -dbpassword ', variables('Q'),  parameters('databaseLoginPassword'), variables('Q'), ' -webuser ', variables('Q'),  parameters('webUsername'), variables('Q'), ' -webpassword ', variables('Q'),  parameters('webPassword'), variables('Q'), ' -MSIuri ', variables('Q'),  parameters('msiURL'), variables('Q'),  ' -maxconnections ', variables('Q'),  parameters('webServerMaxConnect'), variables('Q'), ' -trace ', variables('Q'),  parameters('trace'), variables('Q'), ' -installMSI ', variables('Q'),  parameters('installMSI'), variables('Q'), ' -updateMSI ', variables('Q'),  parameters('updateMSI'), variables('Q'),' -triggerWebConfig ', variables('Q'),  parameters('triggerWebConfig'), variables('Q'),' -UninstallMSI ', variables('Q'),  parameters('UninstallMSI'), variables('Q'), ' -fixLicense ', variables('Q'),  parameters('fixLicense'), variables('Q'), ';if ($LASTEXITCODE -ne 0) {Write-Error (\"MSI Install failed\");exit $LASTEXITCODE}; exit 0;popd;}\"')]"
+                           }
+                        }
+                     }
+                  ]
+               }
+            }
+         }
+      },
+      {
+         "condition": "[variables('isCustomImage')]",
+         "type": "Microsoft.Compute/virtualMachineScaleSets",
+         "name": "[variables('customNamingInfix')]",
+         "location": "[parameters('location')]",
+         "apiVersion": "2019-07-01",
+         "dependsOn": [
+            "[concat('Microsoft.Network/loadBalancers/', variables('loadBalancerName'))]",
+            "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+            "[concat('Microsoft.Sql/servers/', variables('sqlserverName'))]",
+            "[concat('Microsoft.Sql/servers/', variables('sqlserverName'), '/databases/', parameters('databaseName'))]",
+            "[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('dbvmssCustomName'))]"
          ],
          "sku": {
             "name": "[parameters('virtualMachineSize')]",
@@ -654,12 +936,10 @@
                      "caching": "ReadOnly",
                      "createOption": "FromImage"
                   },
-                  "imageReference": {
-                       "id": "/subscriptions/739c4e86-bd75-4910-8d6e-d7eb23ab94f3/resourceGroups/BakingDP/providers/Microsoft.Compute/images/w12r2d-14-2-10image"
-                   }
+                  "imageReference": "[variables('imageReference')]"
                },
                "osProfile": {
-                  "computerNamePrefix": "[variables('namingInfix')]",
+                  "computerNamePrefix": "[variables('customNamingInfix')]",
                   "adminUsername": "[parameters('adminUsername')]",
                   "adminPassword": "[parameters('adminPassword')]",
                   "windowsConfiguration": {
@@ -1002,6 +1282,16 @@
       "rdpAddress": {
          "type": "string",
          "value": "[concat(reference(variables('publicIPAddressName')).dnsSettings.fqdn, ':50000')]"
+      },
+      "offerId": {
+         "condition": "[not(variables('isCustomImage'))]",
+         "value": "[variables('imageOfferName')]",
+         "type": "string"
+      },
+      "skuId": {
+         "condition": "[not(variables('isCustomImage'))]",
+         "value": "[variables('imageSku')]",
+         "type": "string"
       }
    }
 }
